@@ -29,3 +29,12 @@ To keep the data updated, you can schedule the script to run at regular interval
 ## Disclaimer
 
 This plugin is an unofficial project and is not affiliated with, endorsed by, or supported by Libra.
+
+### Links
+
+- https://help.usetrmnl.com/en/articles/9510536-private-plugins
+- https://usetrmnl.com/framework
+- https://github.com/Shopify/liquid
+- https://github.com/usetrmnl/plugins
+- https://docs.usetrmnl.com/go/private-plugins/create-a-screen
+- https://libra-app.eu/api/
