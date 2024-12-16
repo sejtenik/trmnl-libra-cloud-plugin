@@ -1,0 +1,112 @@
+<!-- import Highcharts + Chartkick libraries -->
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartkick@5.0.1/dist/chartkick.min.js"></script>
+
+<!-- markup with empty, ID'd element for chart injection -->
+<div class="view view--full">
+    <div class="layout layout--col gap--space-between">
+        <div class="grid grid--cols-3">
+            <div class="item">
+                <div class="meta"></div>
+                <div class="content">
+                    <span class="value value--tnums">{{ current }} kg</span>
+                    <span class="label">Aktualna</span>
+                </div>
+            </div>
+            <div class="item">
+                <div class="meta"></div>
+                <div class="content">
+                    <span class="value value--tnums">{{ average }} kg</span>
+                    <span class="label">Średnia tygodniowa</span>
+                </div>
+            </div>
+            <div class="item">
+                <div class="meta"></div>
+                <div class="content">
+                    <span class="value value--tnums">{{ change }} kg</span>
+                    <span class="label">Zmiana tygodniowa</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="chart-123" style="width: 100%"></div>
+    </div>
+
+    <div class="title_bar">
+        <img class="image" src="https://libra-app.eu/images/icon-512.png" />
+        <span class="title">Libra Cloud</span>
+        <span class="instance">{{ timestamp }} api.libra-app.eu</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    var data = [
+        {% for item in weights %}
+        ["{{ item.date }}", {{ item.weight }}]{% if forloop.last == false %},{% endif %}
+        {% endfor %}
+    ];
+
+    // recommended configs to achieve the TRMNL Framework aesthetic
+    var createChart = function() {
+        new Chartkick["LineChart"](
+            "chart-123",
+            data,
+            {
+                adapter: "highcharts", // chartjs, google, etc available
+                prefix: "",
+                thousands: ",",
+                points: false,
+                colors: ["black"],
+                curve: true,
+                library: {
+                    chart: {
+                        height: 260
+                    },
+                    plotOptions: {
+                        series: {
+                            animation: false,
+                            lineWidth: 4
+                        }
+                    },
+                    yAxis: {
+                        labels: {
+                            style: {
+                                fontSize: "16px",
+                                color:"#000000"
+                            }
+                        },
+                        gridLineDashStyle: "shortdot",
+                        gridLineWidth: 1,
+                        gridLineColor: "#000000",
+                        tickAmount: 14,
+                        min: 70, // Minimalna wartość osi Y
+                        max: 82, // Maksymalna wartość osi Y
+                    },
+                    xAxis: {
+                        type: "daytime",
+                        labels: {
+                            style: {
+                                fontSize: "16px",
+                                color: "#000000"
+                            }
+                        },
+                        lineWidth: 0,
+                        gridLineDashStyle: "dot",
+                        tickWidth: 1,
+                        tickLength: 0,
+                        gridLineWidth: 1,
+                        gridLineColor: "#000000",
+                        tickPixelInterval: 15
+                    }
+                }
+            });
+    };
+
+    // ensure your chart loads before plugin render is generated
+    if ("Chartkick" in window) {
+        createChart();
+    } else {
+        window.addEventListener("chartkick:load", createChart, true);
+    }
+</script>
