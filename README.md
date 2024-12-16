@@ -2,6 +2,8 @@
 
 Unofficial Libra plugin for TRMNL.
 
+<img src="assets/libra-plugin-trmnl.bmp" alt="screenshot" width="50%"/>
+
 ## Details
 Libra is an Android app designed to help you track your weight. For subscribers, it offers an API that allows access to historical weight data stored on their server.  
 This plugin fetches that data and sends it to TRMNL, displaying it on an e-ink screen as a chart along with key statistics.
