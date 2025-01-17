@@ -47,6 +47,11 @@
         {% endfor %}
     ];
 
+    // Calculate dynamic min and max values for the Y-axis
+    const weights = data.map(function(item) { return item[1]; });
+    const yMin = Math.min(...weights);
+    const yMax = Math.max(...weights);
+
     // recommended configs to achieve the TRMNL Framework aesthetic
     var createChart = function() {
         new Chartkick["LineChart"](
@@ -80,8 +85,8 @@
                         gridLineWidth: 1,
                         gridLineColor: "#000000",
                         tickAmount: 14,
-                        min: 70, // Minimalna wartość osi Y
-                        max: 82, // Maksymalna wartość osi Y
+                        min: yMin,
+                        max: yMax,
                     },
                     xAxis: {
                         type: "daytime",
