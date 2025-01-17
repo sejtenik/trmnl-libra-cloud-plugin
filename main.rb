@@ -102,8 +102,8 @@ end
 
 ############# execution #########
 
-ten_years_ago = (Date.today << (10 * 12)).strftime('%Y%m%d')
+date_from = (Date.today - (ENV['LIBRA_WEEKS'].to_i * 7)).strftime('%Y%m%d')
 
-raw_data = get_libra_raw_data(ten_years_ago)
+raw_data = get_libra_raw_data(date_from)
 data = transform(raw_data)
 send_to_trmnl(data)

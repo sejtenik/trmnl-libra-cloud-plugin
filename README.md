@@ -19,6 +19,7 @@ This code interacts with both the Libra REST API and the TRMNL webhook API. You 
 TRMNL_API_KEY=<your api key>
 TRMNL_PLUGIN_ID=<your plugin UUID>
 LIBRA_API_KEY=<your libra api key>
+LIBRA_WEEKS=<number of weeks for which to fetch data>
 ```
 To obtain your Libra API key, open the Libra app on your Android device, tap **Settings** (gear icon), go to **Libra Cloud**, then open the three-dot menu and select **Libra Cloud API**.
 
