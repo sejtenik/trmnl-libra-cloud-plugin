@@ -1,8 +1,10 @@
 <!-- import Highcharts + Chartkick libraries -->
 <script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/highcharts-more.js"></script>
+
+<!-- TODO remove chartkick dep -->
 <script src="https://cdn.jsdelivr.net/npm/chartkick@5.0.1/dist/chartkick.min.js"></script>
 
-<!-- markup with empty, ID'd element for chart injection -->
 <div class="view view--full">
     <div class="layout layout--col gap--space-between">
         <div class="grid grid--cols-3">
@@ -41,77 +43,137 @@
 
 <script type="text/javascript">
 
-    var data = [
-        {% for item in weights %}
-        ["{{ item.date }}", {{ item.weight }}]{% if forloop.last == false %},{% endif %}
-        {% endfor %}
-    ];
+    function formatDateLabel(dateString) {
+        let date = new Date(dateString);
 
-    // Calculate dynamic min and max values for the Y-axis
-    const weights = data.map(function(item) { return item[1]; });
-    const yMin = Math.min(...weights);
-    const yMax = Math.max(...weights);
+        return date.toLocaleDateString('pl-PL', {
+            month: 'short',
+            day: '2-digit'
+        });
+    }
 
-    // recommended configs to achieve the TRMNL Framework aesthetic
+    const v_categories = [];
+    const v_linedata = [];
+    const v_rangedata = [];
+
+    {% for item in weights %}
+        v_categories.push(formatDateLabel("{{ item.date }}"));
+        v_linedata.push({{ item.trend }});
+        v_rangedata.push([{{ item.trend }}, {{ item.weight }}]);
+    {% endfor %}
+
+    let minValue = Infinity;
+    let maxValue = -Infinity;
+
+    v_rangedata.forEach(subArray => {
+        subArray.forEach(value => {
+            if (value < minValue) {
+                minValue = value;
+            }
+            if (value > maxValue) {
+                maxValue = value;
+            }
+        });
+    });
+
+    const yMin = minValue - 0.1
+    const yMax = maxValue + 0.1;
+
     var createChart = function() {
-        new Chartkick["LineChart"](
-            "chart-123",
-            data,
-            {
-                adapter: "highcharts", // chartjs, google, etc available
-                prefix: "",
-                thousands: ",",
-                points: false,
-                colors: ["black"],
-                curve: true,
-                library: {
-                    chart: {
-                        height: 260
-                    },
-                    plotOptions: {
-                        series: {
-                            animation: false,
-                            lineWidth: 4
+        Highcharts.chart('chart-123', {
+            chart: {
+                type: 'columnrange',
+                height: 260
+            },
+            title: {
+                text: ''
+            },
+            yAxis: [
+                {
+                    labels: {
+                        style: {
+                            fontSize: "16px",
+                            color: "#000000"
                         }
                     },
-                    yAxis: {
-                        labels: {
-                            style: {
-                                fontSize: "16px",
-                                color:"#000000"
-                            }
-                        },
-                        gridLineDashStyle: "shortdot",
-                        gridLineWidth: 1,
-                        gridLineColor: "#000000",
-                        tickAmount: 14,
-                        min: yMin,
-                        max: yMax,
+                    gridLineDashStyle: "shortdot",
+                    gridLineWidth: 1,
+                    gridLineColor: "#000000",
+                    tickAmount: 14,
+                    min: yMin,
+                    max: yMax,
+                    title: null
+                },
+                {
+                    opposite: true,
+                    labels: {
+                        style: {
+                            fontSize: "16px",
+                            color: "#000000"
+                        }
                     },
-                    xAxis: {
-                        type: "daytime",
-                        labels: {
-                            style: {
-                                fontSize: "16px",
-                                color: "#000000"
-                            }
-                        },
-                        lineWidth: 0,
-                        gridLineDashStyle: "dot",
-                        tickWidth: 1,
-                        tickLength: 0,
-                        gridLineWidth: 1,
-                        gridLineColor: "#000000",
-                        tickPixelInterval: 15
+                    tickAmount: 14,
+                    min: yMin,
+                    max: yMax,
+                    title: null
+                }
+            ],
+            xAxis: {
+                categories: v_categories,
+                labels: {
+                    style: {
+                        fontSize: "16px",
+                        color: "#000000"
+                    }
+                },
+                lineWidth: 0,
+                gridLineDashStyle: "dot",
+                tickWidth: 1,
+                tickLength: 0,
+                gridLineWidth: 1,
+                gridLineColor: "#000000",
+                tickPixelInterval: 15
+            },
+            legend: {
+                enabled: false
+            },
+            plotOptions: {
+                columnrange: {
+                    pointWidth: 2,
+                    borderWidth: 0
+                },
+                series: {
+                    animation: false,
+                    lineWidth: 4
+                }
+            },
+            series: [
+                {
+                    name: '',
+                    data: v_rangedata,
+                    type: 'columnrange',
+                    color: '#000000'
+                },
+                {
+                    name: '',
+                    data: v_linedata,
+                    type: 'spline',
+                    color: 'black',
+                    marker: {
+                        enabled: false
                     }
                 }
-            });
+            ],
+            credits: {
+                enabled: false
+            },
+        });
     };
 
-    // ensure your chart loads before plugin render is generated
     if ("Chartkick" in window) {
         createChart();
     } else {
         window.addEventListener("chartkick:load", createChart, true);
     }
+
 </script>

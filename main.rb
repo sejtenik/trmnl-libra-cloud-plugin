@@ -41,7 +41,8 @@ def transform(raw_data)
 
   transformed_data_weights = data_weight_values.map do |entry|
     {:date=> entry["date"][0..9],                 # "2024-12-15T16:22:38.000Z" -> "2024-12-15"
-     :weight => entry["weight_trend"].floor(1)    # 82.30899810791016 -> 82.3
+     :trend => entry["weight_trend"].floor(1),    # 82.30899810791016 -> 82.3
+     :weight => entry["weight"].floor(1)
     }
   end
 
