@@ -11,22 +11,22 @@
             <div class="item">
                 <div class="meta"></div>
                 <div class="content">
-                    <span class="value value--tnums">{{ current }} kg</span>
+                    <span class="value value--tnums">{{ current_weight  }} kg</span>
                     <span class="label">Aktualna</span>
                 </div>
             </div>
             <div class="item">
                 <div class="meta"></div>
                 <div class="content">
-                    <span class="value value--tnums">{{ average }} kg</span>
-                    <span class="label">Średnia tygodniowa</span>
+                    <span class="value value--tnums">{{ current_trend }} kg</span>
+                    <span class="label">Trend</span>
                 </div>
             </div>
             <div class="item">
                 <div class="meta"></div>
                 <div class="content">
                     <span class="value value--tnums">{{ change }} kg</span>
-                    <span class="label">Zmiana tygodniowa</span>
+                    <span class="label">Tyg. zmiana trendu</span>
                 </div>
             </div>
         </div>
@@ -36,8 +36,8 @@
 
     <div class="title_bar">
         <img class="image" src="https://libra-app.eu/images/icon-512.png" />
-        <span class="title">Libra Cloud</span>
-        <span class="instance">{{ timestamp }} api.libra-app.eu</span>
+        <span class="title">Libra Weight Manager</span>
+        <span class="instance"></span>
     </div>
 </div>
 
@@ -50,40 +50,71 @@
             month: 'short',
             day: '2-digit'
         });
-    }
+    };
 
-    const v_categories = [];
-    const v_linedata = [];
-    const v_rangedata = [];
+    function roundToFifthDecimal(num, roundUp = true) {
+        if (roundUp) {
+            return Math.ceil(num / 0.2) * 0.2;
+        } else  {
+            return Math.floor(num / 0.2) * 0.2;
+        }
+    };
+
+    const libraWeightData = [];
 
     {% for item in weights %}
-        v_categories.push(formatDateLabel("{{ item.date }}"));
-        v_linedata.push({{ item.trend }});
-        v_rangedata.push([{{ item.trend }}, {{ item.weight }}]);
+    libraWeightData.push({
+        date: "{{ item.date }}",
+        weight: {{ item.weight }},
+        trend: {{ item.trend }}
+    });
     {% endfor %}
 
+    const dates = libraWeightData.map(item => item.date);
+    const startDate = new Date(dates[0]);
+    const endDate = new Date(dates[dates.length - 1]);
+
+    const allDates = [];
+
+    //Fill gaps in dates range
+    for (let d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
+        allDates.push(d.toISOString().split('T')[0]);
+    }
+
+    const dateLabels = [];
+    const weightAndTrendRange = [];
+    const trendData = [];
+
+    allDates.forEach(date => {
+        const entry = libraWeightData.find(item => item.date === date);
+        dateLabels.push(date);
+        trendData.push(entry ? entry.trend : null);
+        weightAndTrendRange.push(entry ? [entry.trend, entry.weight] : [null, null]);
+    });
+
+    //calculate min and max for the Y axis
     let minValue = Infinity;
     let maxValue = -Infinity;
 
-    v_rangedata.forEach(subArray => {
+    weightAndTrendRange.forEach(subArray => {
         subArray.forEach(value => {
-            if (value < minValue) {
+            if (value && value < minValue) {
                 minValue = value;
             }
-            if (value > maxValue) {
+            if (value && value > maxValue) {
                 maxValue = value;
             }
         });
     });
 
-    const yMin = minValue - 0.1
-    const yMax = maxValue + 0.1;
+    const yMin = roundToFifthDecimal(minValue, false);
+    const yMax = roundToFifthDecimal(maxValue, true);
 
-    var createChart = function() {
+    const createChart = function() {
         Highcharts.chart('chart-123', {
             chart: {
                 type: 'columnrange',
-                height: 260
+                height: 340
             },
             title: {
                 text: ''
@@ -99,7 +130,7 @@
                     gridLineDashStyle: "shortdot",
                     gridLineWidth: 1,
                     gridLineColor: "#000000",
-                    tickAmount: 14,
+                    tickAmount: 15,
                     min: yMin,
                     max: yMax,
                     title: null
@@ -112,19 +143,24 @@
                             color: "#000000"
                         }
                     },
-                    tickAmount: 14,
+                    gridLineWidth: 0,
+                    tickAmount: 15,
                     min: yMin,
                     max: yMax,
                     title: null
                 }
             ],
             xAxis: {
-                categories: v_categories,
+                type: "datetime",
+                categories: dateLabels,
                 labels: {
                     style: {
                         fontSize: "16px",
                         color: "#000000"
-                    }
+                    },
+                    formatter: function() {
+                        return formatDateLabel(this.value);
+                    },
                 },
                 lineWidth: 0,
                 gridLineDashStyle: "dot",
@@ -150,18 +186,19 @@
             series: [
                 {
                     name: '',
-                    data: v_rangedata,
+                    data: weightAndTrendRange,
                     type: 'columnrange',
                     color: '#000000'
                 },
                 {
                     name: '',
-                    data: v_linedata,
+                    data: trendData,
                     type: 'spline',
                     color: 'black',
                     marker: {
                         enabled: false
-                    }
+                    },
+                    connectNulls: true
                 }
             ],
             credits: {

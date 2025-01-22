@@ -47,25 +47,25 @@ def transform(raw_data)
   end
 
   last_entry = data_weight_values.max_by {|entry| entry["date"]}
-  last_entry_value = last_entry["weight"].floor(1)
+  last_entry_weight_value = last_entry["weight"].floor(1)
+  last_entry_trend_value = last_entry["weight_trend"].floor(1)
 
-  now = Time.now
-  one_week_ago = now - (7 * 24 * 60 * 60)  # 7 days in seconds
+  one_week_ago = (Time.now - (7 * 24 * 60 * 60)).to_date # 7 days in seconds
 
-  weights_values = data_weight_values.filter { |entry|
-    date = Time.parse(entry["date"])
-    date >= one_week_ago && date <= now
+  weights_trend_week_values = data_weight_values.filter { |entry|
+    date = Time.parse(entry["date"]).to_date
+    date > one_week_ago && date < Date.today
   }.map { |entry|
-    entry["weight"]
+    entry["weight_trend"]
   }
 
-  average = (weights_values.sum.to_f / weights_values.size).floor(1)
+  average_trend = (weights_trend_week_values.sum.to_f / weights_trend_week_values.size).floor(1)
 
   {
     :weights => transformed_data_weights,
-    :current => last_entry_value,
-    :average => average,
-    :change => (last_entry_value - average).floor(1),
+    :current_weight => last_entry_weight_value,
+    :current_trend => last_entry_trend_value,
+    :change => (last_entry_trend_value - average_trend).floor(1),
     :timestamp => DateTime.now
   }
 end
