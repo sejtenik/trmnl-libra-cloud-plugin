@@ -1,17 +1,13 @@
-<!-- import Highcharts + Chartkick libraries -->
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://code.highcharts.com/highcharts-more.js"></script>
 
-<!-- TODO remove chartkick dep -->
-<script src="https://cdn.jsdelivr.net/npm/chartkick@5.0.1/dist/chartkick.min.js"></script>
-
 <div class="view view--full">
     <div class="layout layout--col gap--space-between">
-        <div class="grid grid--cols-3">
+        <div class="grid grid--cols-3" style="margin-left: 70px; margin-bottom: 5px;">
             <div class="item">
                 <div class="meta"></div>
                 <div class="content">
-                    <span class="value value--tnums">{{ current_weight  }} kg</span>
+                    <span class="value value--tnums">{{ current_weight }} kg</span>
                     <span class="label">Aktualna</span>
                 </div>
             </div>
@@ -35,7 +31,7 @@
     </div>
 
     <div class="title_bar">
-        <img class="image" src="https://libra-app.eu/images/icon-512.png" />
+        <img class="image" src="https://libra-app.eu/images/icon-512.png"/>
         <span class="title">Libra Weight Manager</span>
         <span class="instance"></span>
     </div>
@@ -50,15 +46,15 @@
             month: 'short',
             day: '2-digit'
         });
-    };
+    }
 
     function roundToFifthDecimal(num, roundUp = true) {
         if (roundUp) {
             return Math.ceil(num / 0.2) * 0.2;
-        } else  {
+        } else {
             return Math.floor(num / 0.2) * 0.2;
         }
-    };
+    }
 
     const libraWeightData = [];
 
@@ -110,107 +106,99 @@
     const yMin = roundToFifthDecimal(minValue, false);
     const yMax = roundToFifthDecimal(maxValue, true);
 
-    const createChart = function() {
-        Highcharts.chart('chart-123', {
-            chart: {
-                type: 'columnrange',
-                height: 340
-            },
-            title: {
-                text: ''
-            },
-            yAxis: [
-                {
-                    labels: {
-                        style: {
-                            fontSize: "16px",
-                            color: "#000000"
-                        }
-                    },
-                    gridLineDashStyle: "shortdot",
-                    gridLineWidth: 1,
-                    gridLineColor: "#000000",
-                    tickAmount: 15,
-                    min: yMin,
-                    max: yMax,
-                    title: null
-                },
-                {
-                    opposite: true,
-                    labels: {
-                        style: {
-                            fontSize: "16px",
-                            color: "#000000"
-                        }
-                    },
-                    gridLineWidth: 0,
-                    tickAmount: 15,
-                    min: yMin,
-                    max: yMax,
-                    title: null
-                }
-            ],
-            xAxis: {
-                type: "datetime",
-                categories: dateLabels,
+    Highcharts.chart('chart-123', {
+        chart: {
+            type: 'columnrange',
+            height: 340
+        },
+        title: {
+            text: ''
+        },
+        yAxis: [
+            {
                 labels: {
                     style: {
                         fontSize: "16px",
                         color: "#000000"
-                    },
-                    formatter: function() {
-                        return formatDateLabel(this.value);
-                    },
+                    }
                 },
-                lineWidth: 0,
-                gridLineDashStyle: "dot",
-                tickWidth: 1,
-                tickLength: 0,
+                gridLineDashStyle: "shortdot",
                 gridLineWidth: 1,
                 gridLineColor: "#000000",
-                tickPixelInterval: 15
+                tickAmount: 15,
+                min: yMin,
+                max: yMax,
+                title: null
             },
-            legend: {
-                enabled: false
-            },
-            plotOptions: {
-                columnrange: {
-                    pointWidth: 2,
-                    borderWidth: 0
+            {
+                opposite: true,
+                labels: {
+                    style: {
+                        fontSize: "16px",
+                        color: "#000000"
+                    }
                 },
-                series: {
-                    animation: false,
-                    lineWidth: 4
-                }
-            },
-            series: [
-                {
-                    name: '',
-                    data: weightAndTrendRange,
-                    type: 'columnrange',
-                    color: '#000000'
+                gridLineWidth: 0,
+                tickAmount: 15,
+                min: yMin,
+                max: yMax,
+                title: null
+            }
+        ],
+        xAxis: {
+            type: "datetime",
+            categories: dateLabels,
+            labels: {
+                style: {
+                    fontSize: "16px",
+                    color: "#000000"
                 },
-                {
-                    name: '',
-                    data: trendData,
-                    type: 'spline',
-                    color: 'black',
-                    marker: {
-                        enabled: false
-                    },
-                    connectNulls: true
-                }
-            ],
-            credits: {
-                enabled: false
+                formatter: function () {
+                    return formatDateLabel(this.value);
+                },
             },
-        });
-    };
-
-    if ("Chartkick" in window) {
-        createChart();
-    } else {
-        window.addEventListener("chartkick:load", createChart, true);
-    }
+            lineWidth: 0,
+            gridLineDashStyle: "dot",
+            tickWidth: 1,
+            tickLength: 0,
+            gridLineWidth: 1,
+            gridLineColor: "#000000",
+            tickPixelInterval: 15
+        },
+        legend: {
+            enabled: false
+        },
+        plotOptions: {
+            columnrange: {
+                pointWidth: 2,
+                borderWidth: 0
+            },
+            series: {
+                animation: false,
+                lineWidth: 4
+            }
+        },
+        series: [
+            {
+                name: '',
+                data: weightAndTrendRange,
+                type: 'columnrange',
+                color: '#000000'
+            },
+            {
+                name: '',
+                data: trendData,
+                type: 'spline',
+                color: 'black',
+                marker: {
+                    enabled: false
+                },
+                connectNulls: true
+            }
+        ],
+        credits: {
+            enabled: false
+        },
+    });
 
 </script>
