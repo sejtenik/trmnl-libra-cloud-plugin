@@ -39,16 +39,20 @@ def transform(raw_data)
   puts "Data transformations"
   data_weight_values = raw_data.values[0]
 
-  transformed_data_weights = data_weight_values.map do |entry|
+  transformed_data_weights = data_weight_values
+       .group_by { |entry| entry["date"][0..9] }
+       .transform_values { |group| group.max_by { |entry| entry["date"] } }
+       .values
+       .map do |entry|
     {:date=> entry["date"][0..9],                 # "2024-12-15T16:22:38.000Z" -> "2024-12-15"
-     :trend => entry["weight_trend"].floor(1),    # 82.30899810791016 -> 82.3
-     :weight => entry["weight"].floor(1)
+     :trend => entry["weight_trend"].round(1),    # 82.30899810791016 -> 82.3
+     :weight => entry["weight"].round(1)
     }
   end
 
   last_entry = data_weight_values.max_by {|entry| entry["date"]}
-  last_entry_weight_value = last_entry["weight"].floor(1)
-  last_entry_trend_value = last_entry["weight_trend"].floor(1)
+  last_entry_weight_value = last_entry["weight"].round(1)
+  last_entry_trend_value = last_entry["weight_trend"].round(1)
 
   one_week_ago = (Time.now - (7 * 24 * 60 * 60)).to_date # 7 days in seconds
 
@@ -59,13 +63,13 @@ def transform(raw_data)
     entry["weight_trend"]
   }
 
-  average_trend = (weights_trend_week_values.sum.to_f / weights_trend_week_values.size).floor(1)
+  average_trend = (weights_trend_week_values.sum.to_f / weights_trend_week_values.size)
 
   {
     :weights => transformed_data_weights,
     :current_weight => last_entry_weight_value,
     :current_trend => last_entry_trend_value,
-    :change => (last_entry_trend_value - average_trend).floor(1),
+    :change => (last_entry_trend_value - average_trend).round(1),
     :timestamp => DateTime.now
   }
 end
