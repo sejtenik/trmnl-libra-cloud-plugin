@@ -8,7 +8,7 @@
                 <div class="meta"></div>
                 <div class="content">
                     <span class="value value--tnums">{{ current_weight }} kg</span>
-                    <span class="label">Aktualna</span>
+                    <span class="label">Aktualna ({{current_weight_date}})</span>
                 </div>
             </div>
             <div class="item">
@@ -39,6 +39,8 @@
 
 <script type="text/javascript">
 
+    const yInterval = 0.5;
+
     function formatDateLabel(dateString) {
         let date = new Date(dateString);
 
@@ -48,12 +50,17 @@
         });
     }
 
-    function roundToFifthDecimal(num, roundUp = true) {
+    function roundToInterval(num, roundUp = true) {
         if (roundUp) {
-            return Math.ceil(num / 0.2) * 0.2;
+            return Math.ceil(num / yInterval) * yInterval;
         } else {
-            return Math.floor(num / 0.2) * 0.2;
+            return Math.floor(num / yInterval) * yInterval;
         }
+    }
+
+    function isFirstDayOfMonth(dateString) {
+        const date = new Date(dateString);
+        return date.getDate() === 1;
     }
 
     const libraWeightData = [];
@@ -73,17 +80,21 @@
     const allDates = [];
 
     //Fill gaps in dates range
-    for (let d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
+    for (let d = startDate; d <= new Date(); d.setDate(d.getDate() + 1)) {
         allDates.push(d.toISOString().split('T')[0]);
     }
 
     const dateLabels = [];
     const weightAndTrendRange = [];
     const trendData = [];
+    const monthBeginningIndexes = [];
 
     allDates.forEach(date => {
         const entry = libraWeightData.find(item => item.date === date);
         dateLabels.push(date);
+        if (isFirstDayOfMonth(date)) {
+            monthBeginningIndexes.push(dateLabels.length - 1);
+        }
         trendData.push(entry ? entry.trend : null);
         weightAndTrendRange.push(entry ? [entry.trend, entry.weight] : [null, null]);
     });
@@ -103,13 +114,24 @@
         });
     });
 
-    const yMin = roundToFifthDecimal(minValue, false);
-    const yMax = roundToFifthDecimal(maxValue, true);
+    const yMin = roundToInterval(minValue, false);
+    const yMax = roundToInterval(maxValue, true);
+
+    const xAxisLines = [];
+    monthBeginningIndexes.forEach( i => {
+        xAxisLines.push({
+            value: i,
+            color: 'black',
+            width: 1,
+            dashStyle: 'Dash',
+        });
+    });
 
     Highcharts.chart('chart-123', {
         chart: {
             type: 'columnrange',
-            height: 340
+            height: 340,
+            alignTicks: false
         },
         title: {
             text: ''
@@ -125,10 +147,13 @@
                 gridLineDashStyle: "shortdot",
                 gridLineWidth: 1,
                 gridLineColor: "#000000",
-                tickAmount: 15,
+                allowDecimals: true,
+                tickInterval: yInterval,
                 min: yMin,
                 max: yMax,
-                title: null
+                title: null,
+                startOnTick: false,
+                endOnTick: false,
             },
             {
                 opposite: true,
@@ -139,10 +164,13 @@
                     }
                 },
                 gridLineWidth: 0,
-                tickAmount: 15,
+                tickInterval: yInterval,
+                allowDecimals: true,
                 min: yMin,
                 max: yMax,
-                title: null
+                title: null,
+                startOnTick: false,
+                endOnTick: false,
             }
         ],
         xAxis: {
@@ -157,13 +185,15 @@
                     return formatDateLabel(this.value);
                 },
             },
+            plotLines: xAxisLines,
             lineWidth: 0,
             gridLineDashStyle: "dot",
             tickWidth: 1,
             tickLength: 0,
             gridLineWidth: 1,
             gridLineColor: "#000000",
-            tickPixelInterval: 15
+            tickPixelInterval: 15,
+            startOnTick: false,
         },
         legend: {
             enabled: false
