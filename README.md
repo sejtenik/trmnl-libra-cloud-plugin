@@ -41,3 +41,7 @@ This plugin is an unofficial project and is not affiliated with, endorsed by, or
 - https://github.com/usetrmnl/plugins
 - https://docs.usetrmnl.com/go/private-plugins/create-a-screen
 - https://libra-app.eu/api/
+- https://github.com/eindpunt/awesome-TRMNL
+
+### Check out my other private TRMNL plugins.
+- https://github.com/sejtenik?tab=repositories&q=trmnl-
