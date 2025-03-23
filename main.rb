@@ -4,6 +4,8 @@ require 'date'
 require 'time'
 require 'dotenv/load'
 
+TRMNL_PAYLOAD_LIMIT = 2048
+
 def get_libra_raw_data(since)
   libra_api_key = ENV['LIBRA_API_KEY']
   libra_api_uri = "api.libra-app.eu"
@@ -44,10 +46,10 @@ def transform(raw_data)
        .transform_values { |group| group.max_by { |entry| entry["date"] } }
        .values
        .map do |entry|
-    {:date=> entry["date"][0..9],                 # "2024-12-15T16:22:38.000Z" -> "2024-12-15"
-     :trend => entry["weight_trend"].round(1),    # 82.30899810791016 -> 82.3
-     :weight => entry["weight"].round(1)
-    }
+    [entry["date"][0..9],                 # "2024-12-15T16:22:38.000Z" -> "2024-12-15"
+     entry["weight"].round(1),
+     entry["weight_trend"].round(1)    # 82.30899810791016 -> 82.3
+    ]
   end
 
   last_entry = data_weight_values.max_by {|entry| entry["date"]}
@@ -64,12 +66,11 @@ def transform(raw_data)
   }.first
 
   {
-    :weights => transformed_data_weights,
-    :current_weight_date => last_entry["date"][0..9],
-    :current_weight => last_entry_weight_value,
-    :current_trend => last_entry_trend_value,
-    :change => (last_entry_trend_value - weights_trend_last_week_value).round(1),
-    :timestamp => DateTime.now
+    :d => last_entry["date"][0..9],
+    :v => last_entry_weight_value,
+    :t => last_entry_trend_value,
+    :c => (last_entry_trend_value - weights_trend_last_week_value).round(1),
+    :w => transformed_data_weights
   }
 end
 
@@ -90,7 +91,18 @@ def send_to_trmnl(data_payload)
   }
 
   request = Net::HTTP::Post.new(uri.path, headers)
-  request.body = {merge_variables: data_payload}.to_json
+  body = { merge_variables: data_payload }.to_json
+
+  puts body
+
+  if body.bytesize > TRMNL_PAYLOAD_LIMIT
+    raise "Request body is too large (#{body.bytesize} bytes, limit: #{TRMNL_PAYLOAD_LIMIT} bytes)"
+  else
+    puts "Request body size: (#{body.bytesize} bytes)"
+  end
+
+  request.body = body
+
 
   response = http.request(request)
 
@@ -98,7 +110,7 @@ def send_to_trmnl(data_payload)
     current_timestamp = DateTime.now.iso8601
     puts "Tasks sent successfully to TRMNL at #{current_timestamp}"
   else
-    puts "Error: #{response.body}"
+    puts "Error: #{response}"
   end
 rescue StandardError => e
   puts e.message
@@ -110,4 +122,5 @@ date_from = (Date.today - (ENV['LIBRA_WEEKS'].to_i * 7)).strftime('%Y%m%d')
 
 raw_data = get_libra_raw_data(date_from)
 data = transform(raw_data)
+
 send_to_trmnl(data)

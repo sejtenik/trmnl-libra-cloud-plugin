@@ -1,6 +1,12 @@
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://code.highcharts.com/highcharts-more.js"></script>
 
+{% assign current_weight = v %}
+{% assign current_weight_date = d %}
+{% assign change = c %}
+{% assign weights = w %}
+{% assign current_trend = t %}
+
 <div class="view view--full">
     <div class="layout layout--col gap--space-between">
         <div class="grid grid--cols-3" style="margin-left: 70px; margin-bottom: 5px;">
@@ -67,9 +73,9 @@
 
     {% for item in weights %}
     libraWeightData.push({
-        date: "{{ item.date }}",
-        weight: {{ item.weight }},
-        trend: {{ item.trend }}
+        date: "{{ item[0] }}",
+        weight: {{ item[1] }},
+        trend: {{ item[2] }}
     });
     {% endfor %}
 
