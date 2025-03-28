@@ -4,7 +4,10 @@ require 'date'
 require 'time'
 require 'dotenv/load'
 
-TRMNL_PAYLOAD_LIMIT = 2048
+require_relative 'list_util'
+require_relative 'trmnl_sender'
+
+MAX_DATA_POINTS_WITHIN_PAYLOAD_LIMIT = 79
 
 def get_libra_raw_data(since)
   libra_api_key = ENV['LIBRA_API_KEY']
@@ -52,6 +55,8 @@ def transform(raw_data)
     ]
   end
 
+  compressed_data_weights = ListUtil.filter_with_end_bias(transformed_data_weights, MAX_DATA_POINTS_WITHIN_PAYLOAD_LIMIT)
+
   last_entry = data_weight_values.max_by {|entry| entry["date"]}
   last_entry_weight_value = last_entry["weight"].round(1)
   last_entry_trend_value = last_entry["weight_trend"].round(1)
@@ -70,57 +75,13 @@ def transform(raw_data)
     :v => last_entry_weight_value,
     :t => last_entry_trend_value,
     :c => (last_entry_trend_value - weights_trend_last_week_value).round(1),
-    :w => transformed_data_weights
+    :w => compressed_data_weights
   }
-end
-
-def send_to_trmnl(data_payload)
-  trmnl_api_key = ENV['TRMNL_API_KEY']
-  webhook_id = ENV['TRMNL_PLUGIN_ID']
-  trmnl_webhook_url = "https://usetrmnl.com/api/custom_plugins/#{webhook_id}"
-
-  puts('Send data to trmnl webhook')
-  uri = URI(trmnl_webhook_url)
-  http = Net::HTTP.new(uri.host, uri.port)
-  http.use_ssl = true
-  #http.set_debug_output($stdout)
-
-  headers = {
-    'Content-Type' => 'application/json',
-    'Authorization' => "Bearer #{trmnl_api_key}"
-  }
-
-  request = Net::HTTP::Post.new(uri.path, headers)
-  body = { merge_variables: data_payload }.to_json
-
-  puts body
-
-  if body.bytesize > TRMNL_PAYLOAD_LIMIT
-    raise "Request body is too large (#{body.bytesize} bytes, limit: #{TRMNL_PAYLOAD_LIMIT} bytes)"
-  else
-    puts "Request body size: (#{body.bytesize} bytes)"
-  end
-
-  request.body = body
-
-
-  response = http.request(request)
-
-  if response.is_a?(Net::HTTPSuccess)
-    current_timestamp = DateTime.now.iso8601
-    puts "Tasks sent successfully to TRMNL at #{current_timestamp}"
-  else
-    puts "Error: #{response}"
-  end
-rescue StandardError => e
-  puts e.message
 end
 
 ############# execution #########
-
 date_from = (Date.today - (ENV['LIBRA_WEEKS'].to_i * 7)).strftime('%Y%m%d')
-
 raw_data = get_libra_raw_data(date_from)
 data = transform(raw_data)
 
-send_to_trmnl(data)
+TrmnlSender.send_to_trmnl(data)

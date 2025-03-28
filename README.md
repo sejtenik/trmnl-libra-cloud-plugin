@@ -25,7 +25,7 @@ To obtain your Libra API key, open the Libra app on your Android device, tap **S
 
 4. Copy the contents of ``template.html.liquid`` and paste it into the markup section of your TRMNL plugin.
 5. Run ``gem install dotenv``
-5. Run ``main.rb``. If it successfully posts data to TRMNL, you are all set. You can refresh the TRMNL interface to check if the data is visible.
+5. Run ``src/main.rb``. If it successfully posts data to TRMNL, you are all set. You can refresh the TRMNL interface to check if the data is visible.
 
 To keep the data updated, you can schedule the script to run at regular intervals according to your needs.
 
